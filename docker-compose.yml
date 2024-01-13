@@ -44,7 +44,7 @@ services:
       - ./server:/app
     links:
       - mysql
-    command: npm start
+    command: npm run start-dev
   client:
     build: ./client
     environment:

@@ -1,6 +1,9 @@
 const cors = require('cors');
+const path = require('path');
 const express = require('express');
 const mysql = require('mysql');
+const fs = require('fs'); // Require the 'fs' module to set permissions
+const port = process.env.PORT || 3000;
 
 const app = express();
 
@@ -12,9 +15,26 @@ const pool = mysql.createPool({
 });
 
 app.use(cors());
+app.set('port', port);
 
-app.listen(process.env.REACT_APP_SERVER_PORT, () => {
-  console.log(`App server now listening on port ${process.env.REACT_APP_SERVER_PORT}`);
+// Define the Unix socket path
+const unixSocketPath = '/home/wichtelwizard/cnf/nodejs.sock';
+
+// Check if the socket file already exists and remove it (optional)
+if (fs.existsSync(unixSocketPath)) {
+  fs.unlinkSync(unixSocketPath);
+}
+
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+
+console.log('logging the dir name', path.join(__dirname, '../client/build'));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+});
+app.listen(unixSocketPath, () => {
+  console.log(`Server is running on Unix socket at ${unixSocketPath}`);
 });
 
 app.get('/test', (req, res) => {
