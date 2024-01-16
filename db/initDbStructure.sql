@@ -1,57 +1,58 @@
 -- Create Database
-CREATE
-DATABASE wichtel;
+CREATE DATABASE IF NOT EXISTS wichtel;
 
 -- Select the Database
 USE wichtel;
 
--- Benutzer Tabelle
-CREATE TABLE Users
+-- Benutzer (Users) Table
+CREATE TABLE IF NOT EXISTS users
 (
-    UserID   INT PRIMARY KEY,
-    Email    VARCHAR(255) NOT NULL,
-    Password VARCHAR(255) NOT NULL
+    userid   INT auto_increment PRIMARY KEY,
+    email    VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    surname    VARCHAR(255) NOT NULL,
+    lastname    VARCHAR(255) NOT NULL
 );
 
--- Events Tabelle
-CREATE TABLE Events
+-- Events Table
+CREATE TABLE IF NOT EXISTS events
 (
-    EventID       INT PRIMARY KEY,
-    CreatorUserID INT,
-    PriceLimit    DECIMAL(10, 2),
-    EventDate     DATE,
-    Status        VARCHAR(50),
-    FOREIGN KEY (CreatorUserID) REFERENCES Users (UserID)
+    eventid       INT auto_increment PRIMARY KEY,
+    creatoruserid INT,
+    pricelimit    DECIMAL(10, 2),
+    eventdate     DATE,
+    status        VARCHAR(50),
+    FOREIGN KEY (creatoruserid) REFERENCES users (userid)
 );
 
--- Teilnehmer Tabelle
-CREATE TABLE Participants
+-- Teilnehmer (Participants) Table
+CREATE TABLE IF NOT EXISTS participants
 (
-    ParticipantID INT PRIMARY KEY,
-    UserID        INT,
-    EventID       INT,
-    GiftWish      VARCHAR(255),
-    FOREIGN KEY (UserID) REFERENCES Users (UserID),
-    FOREIGN KEY (EventID) REFERENCES Events (EventID)
+    participantid INT auto_increment PRIMARY KEY,
+    userid        INT,
+    eventid       INT,
+    giftwish      VARCHAR(255),
+    FOREIGN KEY (userid) REFERENCES users (userid),
+    FOREIGN KEY (eventid) REFERENCES events (eventid)
 );
 
--- Einladungen Tabelle
-CREATE TABLE Invitations
+-- Einladungen (Invitations) Table
+CREATE TABLE IF NOT EXISTS invitations
 (
-    InvitationID     INT PRIMARY KEY,
-    ParticipantID    INT,
-    InvitationStatus VARCHAR(50),
-    FOREIGN KEY (ParticipantID) REFERENCES Participants (ParticipantID)
+    invitationid     INT auto_increment PRIMARY KEY,
+    participantid    INT,
+    invitationstatus VARCHAR(50),
+    FOREIGN KEY (participantid) REFERENCES participants (participantid)
 );
 
--- Zuordnungen Tabelle
-CREATE TABLE Assignments
+-- Zuordnungen (Assignments) Table
+CREATE TABLE IF NOT EXISTS assignments
 (
-    AssignmentID INT PRIMARY KEY,
-    GiverID      INT,
-    ReceiverID   INT,
-    EventID      INT,
-    FOREIGN KEY (GiverID) REFERENCES Participants (ParticipantID),
-    FOREIGN KEY (ReceiverID) REFERENCES Participants (ParticipantID),
-    FOREIGN KEY (EventID) REFERENCES Events (EventID)
+    assignmentid INT auto_increment PRIMARY KEY,
+    giverid      INT,
+    receiverid   INT,
+    eventid      INT,
+    FOREIGN KEY (giverid) REFERENCES participants (participantid),
+    FOREIGN KEY (receiverid) REFERENCES participants (participantid),
+    FOREIGN KEY (eventid) REFERENCES events (eventid)
 );
