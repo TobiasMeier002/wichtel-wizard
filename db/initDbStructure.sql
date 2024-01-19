@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS events
 (
     eventid       INT auto_increment PRIMARY KEY,
+    name          VARCHAR(50),
     creatoruserid INT,
     pricelimit    DECIMAL(10, 2),
     eventdate     DATE,

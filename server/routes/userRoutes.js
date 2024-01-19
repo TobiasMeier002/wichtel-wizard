@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const { findUserByEmail, createUser } = require('../models/User');
+const { createEvent, getEvents } = require('../models/event')
 const { sendConfirmationEmail } = require('../utils/mailer');
 const router = express.Router();
 
@@ -79,6 +80,64 @@ router.post('/login', async (req, res) => {
     console.error(error);
     res.status(500).send('Internal server error');
   }
+});
+
+router.post('/events/register', async (req, res) => {
+  const name = req.body.name;
+  const userid = req.body.userid;
+  const pricelimit = req.body.pricelimit;
+  const eventdate = req.body.date;
+
+  //if (!name || typeof name !== "string" || !pricelimit || typeof pricelimit !== "number" || !eventdate || !userid || typeof userid !== "number" ) {
+  //  return res.status(400).send('name, pricelimit or date invalid');
+  //}
+  var dteventdate;
+  try {
+    dteventdate = Date.parse(eventdate);  
+  } catch (error) {
+    return res.status(400).send('Invalid date format');
+  }
+  createEvent({name: name, creatoruserid: userid, pricelimit: pricelimit, eventdate: dteventdate, status: "created"}, (err, eventid) => {
+    if (err) {
+      console.error("Event registration Error:", err);
+      return res.status(500).send('Internal server error');
+    }
+
+    return res.status(200).json({ eventid: eventid, message: 'Event created Successfull' });
+  });
+
+});
+
+router.get('/events', async (req, res) => {
+  return getEvents((err, events) => {
+    return res.status(200).json(events);
+  });
+});
+
+router.post('/events/addParticipantbyEmail', async (req, res) => {
+  const { eventid, email} = req.body;
+
+  if (!eventid || typeof eventid !== "number" || !email || typeof email !== "string") {
+    return res.status(400).send('eventid or email invalid');
+  }
+
+  findUserByEmail(email, async (err, user) => {
+    if (err) {
+      return res.status(500).send('Server error');
+    }
+
+    if (!user) {
+      
+    }else{
+
+    }
+
+  });
+
+});
+
+router.get('/test', async (req, res) => {
+  return res.status(200).send('Hello World');  
 });
 
 module.exports = router;

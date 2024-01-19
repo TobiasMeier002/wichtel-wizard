@@ -28,7 +28,7 @@ services:
     links:
       - mysql:mysql
     ports:
-      - 8080:81
+      - 8080:80
     restart: always
   server:
     build: ./server
