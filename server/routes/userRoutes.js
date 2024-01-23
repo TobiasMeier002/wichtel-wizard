@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { findUserByEmail, createUser } = require('../models/User');
-const { createEvent, getEvents } = require('../models/event')
+const User = require('../models/User');
+const { createEvent, getEvents, addParticipant } = require('../models/event')
 const { sendConfirmationEmail } = require('../utils/mailer');
 const router = express.Router();
 
@@ -11,24 +11,22 @@ router.post('/register', async (req, res) => {
   }
 
   const { email, password, surname, lastname } = req.body;
-
+  var user = new User();
+  user = req.body;  
   try {
+    console.log(typeof user);
     // Check if user already exists
-    findUserByEmail(email, async (err, user) => {
+    user.findUserByEmail(user.email, async (err, user) => {
       if (err) {
         return res.status(500).send('Error checking user');
       }
 
       if (user) {
         return res.status(409).send('User already exists');
-      }
-
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      }      
 
       // Create user in the database
-      createUser({ Email: email, Password: hashedPassword, Surname: surname, Lastname: lastname }, (err, userId) => {
+      user.createUser({ Email: email, Password: hashedPassword, Surname: surname, Lastname: lastname }, (err, userId) => {
         if (err) {
           console.error("Registration Error:", err);
           return res.status(500).send('Internal server error');
@@ -83,21 +81,12 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/events/register', async (req, res) => {
-  const name = req.body.name;
-  const userid = req.body.userid;
-  const pricelimit = req.body.pricelimit;
-  const eventdate = req.body.date;
+  const { name, userid, pricelimit, eventdate} = req.body;
 
-  //if (!name || typeof name !== "string" || !pricelimit || typeof pricelimit !== "number" || !eventdate || !userid || typeof userid !== "number" ) {
-  //  return res.status(400).send('name, pricelimit or date invalid');
-  //}
-  var dteventdate;
-  try {
-    dteventdate = Date.parse(eventdate);  
-  } catch (error) {
-    return res.status(400).send('Invalid date format');
+  if (!name || typeof name !== "string" || !pricelimit || typeof pricelimit !== "number" || !eventdate || !userid || typeof userid !== "number" ) {
+    return res.status(400).send('name, pricelimit or date invalid');
   }
-  createEvent({name: name, creatoruserid: userid, pricelimit: pricelimit, eventdate: dteventdate, status: "created"}, (err, eventid) => {
+  createEvent({name: name, creatoruserid: userid, pricelimit: pricelimit, eventdate: eventdate, status: "created"}, (err, eventid) => {
     if (err) {
       console.error("Event registration Error:", err);
       return res.status(500).send('Internal server error');
@@ -116,28 +105,14 @@ router.get('/events', async (req, res) => {
 
 router.post('/events/addParticipantbyEmail', async (req, res) => {
   const { eventid, email} = req.body;
-
-  if (!eventid || typeof eventid !== "number" || !email || typeof email !== "string") {
-    return res.status(400).send('eventid or email invalid');
-  }
-
-  findUserByEmail(email, async (err, user) => {
-    if (err) {
+  return addParticipant({ eventid: eventid, email:email}, async (err, message) => {
+    if(err) {
       return res.status(500).send('Server error');
+    } else {
+      return res.status(200).json(message);
     }
-
-    if (!user) {
-      
-    }else{
-
-    }
-
   });
 
-});
-
-router.get('/test', async (req, res) => {
-  return res.status(200).send('Hello World');  
 });
 
 module.exports = router;

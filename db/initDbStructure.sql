@@ -1,4 +1,5 @@
 -- Create Database
+DROP DATABASE IF EXISTS wichtel;
 CREATE DATABASE IF NOT EXISTS wichtel;
 
 -- Select the Database

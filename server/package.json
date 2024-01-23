@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start-dev": "nodemon server.js",
+    "start-dev": "nodemon --legacy-watch server.js",
     "start": "nodemon index.js"
   },
   "keywords": [],
