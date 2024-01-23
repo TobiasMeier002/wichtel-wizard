@@ -1,7 +1,7 @@
-import { SampleComponent } from './components';
+import { Home } from './components';
 function App() {
   return (
-    <SampleComponent />
+    <Home />
   );
 }
 
