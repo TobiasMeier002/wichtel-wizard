@@ -8,7 +8,7 @@ class Event {
   eventdate;
   status;
 
-  constructor () {
+  constructor() {
     this.db = require('../config/db');
   }
 
@@ -20,10 +20,10 @@ class Event {
   }
 
   create(callback) {
-    this.db.query('INSERT INTO events SET ?', {name: this.name, creatoruserid: this.creatoruserid, pricelimit: this.pricelimit, eventdate: this.eventdate, status: this.status}, function (err, result) {
+    this.db.query('INSERT INTO events SET ?', { name: this.name, creatoruserid: this.creatoruserid, pricelimit: this.pricelimit, eventdate: this.eventdate, status: this.status }, function (err, result) {
       if (err) {
         callback(err, null);
-      }else {
+      } else {
         this.eventid = result.insertId;
         callback(null, this.eventid);
       }
@@ -41,13 +41,22 @@ class Event {
     })
   }
 
-  addParticipant(participant, callback) {
+  getbyID(callback) {
+    this.db.query('SELECT * from events WHERE eventid = ?', this.eventid, function (err, result) {
+      if (err) {
+        callback(err, null);
+      } else if (!result[0]) {
+        callback("Event not found", null)
+      } else {
+        callback(null, result[0]);
+      }
+    })
+  }
 
-    const User = require('./User');
-    const user = new User;
+  addParticipant(user, callback) {
     user.findByEmail(participant.email, (err, userfound) => {
       if (userfound) {
-        this.db.query('INSERT INTO participants SET ?', { name: userfound.name, email: userfound.email, hasConfirmed: false}, function (err, result) {
+        this.db.query('INSERT INTO participants SET ?', { name: userfound.name, email: userfound.email, hasConfirmed: false }, function (err, result) {
           if (err) callback(err, null);
           else callback(null, result.insertId);
         });
@@ -56,7 +65,7 @@ class Event {
       }
     });
   }
-  
+
 }
 
 module.exports = { Event };

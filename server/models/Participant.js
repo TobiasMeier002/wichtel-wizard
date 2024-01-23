@@ -2,12 +2,12 @@ class Participant {
 
   db;
 
-  constructor () {
+  constructor() {
     this.db = require('../config/db');
   }
 
   createParticipant(newParticipant, callback) {
-  
+
   }
 
 }
