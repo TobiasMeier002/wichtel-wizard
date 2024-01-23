@@ -1,41 +1,43 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const { createEvent, getEvents, addParticipant } = require('../models/event')
-const { sendConfirmationEmail } = require('../utils/mailer');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+const { sendConfirmationEmail } = require('../utils/mailer');
+const { User } = require('../models/User');
+const { Event } = require('../models/Event');
 
 router.post('/register', async (req, res) => {
   if (!req.body) {
     return res.status(400).send('Request body is missing');
   }
 
-  const { email, password, surname, lastname } = req.body;
-  var user = new User();
-  user = req.body;  
+  const user = new User();
+  user.lastname = req.body.lastname;
+  user.surname = req.body.surname;
+  user.password = req.body.password;
+  user.email = req.body.email;  
+
   try {
-    console.log(typeof user);
     // Check if user already exists
-    user.findUserByEmail(user.email, async (err, user) => {
+    user.findByEmail(user.email, async (err, userfound) => {
       if (err) {
         return res.status(500).send('Error checking user');
       }
 
-      if (user) {
+      if (userfound) {
         return res.status(409).send('User already exists');
       }      
 
       // Create user in the database
-      user.createUser({ Email: email, Password: hashedPassword, Surname: surname, Lastname: lastname }, (err, userId) => {
+      user.create( async (err, userId) => {
         if (err) {
           console.error("Registration Error:", err);
           return res.status(500).send('Internal server error');
         }
 
         // Send confirmation email
-        sendConfirmationEmail(email);
+        sendConfirmationEmail(user.email);
 
-        return res.status(201).json({ message: 'Registration successful' });
+        return res.status(201).json({userid: userId, message: 'Registration successful' });
       });
     });
   } catch (error) {
@@ -48,14 +50,16 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const user = new User();
+  user.password = req.body.password;
+  user.email = req.body.email; 
 
-  if (!email || !password) {
+  if (!user.email || !user.password) {
     return res.status(400).send('Email and password are required');
   }
 
   try {
-    findUserByEmail(email, async (err, user) => {
+    user.findByEmail(user.email, async (err, userfound) => {
 
       if (err) {
         return res.status(500).send('Server error');
@@ -66,13 +70,13 @@ router.post('/login', async (req, res) => {
       }
 
       // Compare submitted password with stored hash
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await bcrypt.compare(user.password, userfound.password);
       if (!isMatch) {
         return res.status(400).send('Invalid credentials');
       }
 
       // Login successful, proceed with your login logic
-      res.status(200).json({ message: 'Login successful' });
+      return res.status(200).json({userid: userfound.userid, message: 'Login successful' });
     });
   } catch (error) {
     console.error(error);
@@ -81,24 +85,26 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/events/register', async (req, res) => {
-  const { name, userid, pricelimit, eventdate} = req.body;
+  const event = new Event();
+  event.creatoruserid = req.body.userid;
+  event.name = req.body.name;
+  event.pricelimit = req.body.pricelimit;
+  event.eventdate = req.body.eventdate;
+  event.status = 'created';
 
-  if (!name || typeof name !== "string" || !pricelimit || typeof pricelimit !== "number" || !eventdate || !userid || typeof userid !== "number" ) {
-    return res.status(400).send('name, pricelimit or date invalid');
-  }
-  createEvent({name: name, creatoruserid: userid, pricelimit: pricelimit, eventdate: eventdate, status: "created"}, (err, eventid) => {
+  event.create( (err, eventid) => {
     if (err) {
       console.error("Event registration Error:", err);
       return res.status(500).send('Internal server error');
     }
-
     return res.status(200).json({ eventid: eventid, message: 'Event created Successfull' });
   });
 
 });
 
 router.get('/events', async (req, res) => {
-  return getEvents((err, events) => {
+  const event = new Event();
+  return event.getAll((err, events) => {
     return res.status(200).json(events);
   });
 });
@@ -109,10 +115,9 @@ router.post('/events/addParticipantbyEmail', async (req, res) => {
     if(err) {
       return res.status(500).send('Server error');
     } else {
-      return res.status(200).json(message);
+      return res.status(200).json({message: message});
     }
   });
-
 });
 
 module.exports = router;

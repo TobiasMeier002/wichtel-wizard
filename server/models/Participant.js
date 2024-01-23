@@ -1,8 +1,15 @@
-const db = require('../config/db');
-const { findUserByEmail, createUser } = require('../models/User');
+class Participant {
 
-function createParticipant(newParticipant, callback) {
+  db;
+
+  constructor () {
+    this.db = require('../config/db');
+  }
+
+  createParticipant(newParticipant, callback) {
   
+  }
+
 }
 
-module.exports = { createParticipant };
+module.exports = { Participant };
