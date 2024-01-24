@@ -56,12 +56,26 @@ class Event {
   addParticipant(user, callback) {
     user.findByEmail(participant.email, (err, userfound) => {
       if (userfound) {
-        this.db.query('INSERT INTO participants SET ?', { name: userfound.name, email: userfound.email, hasConfirmed: false }, function (err, result) {
+        this.db.query('INSERT INTO participants SET ?', { eventid: this.eventid, participantid: userfound.userid, hasConfirmed: false }, function (err, result) {
           if (err) callback(err, null);
           else callback(null, result.insertId);
         });
       } else {
-        //TODO: Add New User as Participant
+        user.create( (err, usercreated) => {
+          if (err) {
+            callback(err, null);
+          } else {
+            this.db.query('INSERT INTO participants SET ?', { eventid: this.eventid, participantid: usercreated.userid, hasConfirmed: false }, function (err, result) {
+              if (err) {
+                callback(err, null);
+              } else {
+                const { sendInvitationEmail } = require('../utils/mailer');
+                sendInvitationEmail(result);
+                callback(null, result.insertId);
+              }
+            });
+          }
+        });
       }
     });
   }

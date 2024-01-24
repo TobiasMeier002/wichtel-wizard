@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { sendConfirmationEmail } = require('../utils/mailer');
 const { User } = require('../models/User');
 const { Event } = require('../models/Event');
 
@@ -33,10 +32,6 @@ router.post('/register', async (req, res) => {
           console.error("Registration Error:", err);
           return res.status(500).send('Internal server error');
         }
-
-        // Send confirmation email
-        sendConfirmationEmail(user.email);
-
         return res.status(201).json({ userid: userId, message: 'Registration successful' });
       });
     });
@@ -47,6 +42,25 @@ router.post('/register', async (req, res) => {
       res.status(500).send('Internal server error');
     }
   }
+});
+
+router.get('/confirm/:confimrUri', async (req, res) => {
+  const user = new User();
+  user.findByConfirmUri(req.params.confimrUri, (err, userfound) => {
+    if (err) {
+      return res.status(500).send('Server error');
+    }
+
+    if (!userfound) {
+      return res.status(401).send('User not found');
+    }
+    user.confirm(userfound.userId, async (err, result) => {
+      if (err) {
+        return res.status(500).send('Server error');
+      }
+      return res.status(200).json(userfound);
+    });    
+  });
 });
 
 router.post('/login', async (req, res) => {
@@ -69,10 +83,14 @@ router.post('/login', async (req, res) => {
         return res.status(401).send('User not found');
       }
 
-      // Compare submitted password with stored hash
-      const isMatch = await bcrypt.compare(user.password, userfound.password);
-      if (!isMatch) {
-        return res.status(400).send('Invalid credentials');
+      if (userfound.emailConfirmed == 1) {
+        // Compare submitted password with stored hash
+        const isMatch = await bcrypt.compare(user.password, userfound.password);
+        if (!isMatch) {
+          return res.status(400).send('Invalid credentials');
+        }
+      } else {
+        return res.status(200).json({confirmUri: userfound.confirmUri, message: 'confirmation needed'});
       }
 
       // Login successful, proceed with your login logic
