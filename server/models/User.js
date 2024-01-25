@@ -39,7 +39,8 @@ class User {
     // Hash password
     const salt = await this.bcrypt.genSalt(10);
     const hashedPassword = await this.bcrypt.hash(this.password, salt);
-    this.confimUri = this.newId(32);
+    const crypto = require('crypto');
+    this.confirmUri = crypto.randomUUID();
     this.emailConfirmed = false;
       this.db.query('INSERT INTO users SET ?', { email: this.email, password: hashedPassword, surname: this.surname, lastname: this.lastname, emailConfirmed: this.emailConfirmed, confirmUri: this.confirmUri }, function (err, result) {
         if (err) {
