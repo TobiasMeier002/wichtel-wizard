@@ -45,12 +45,33 @@ class User {
     );
   }
 
+  async update(callback) {
+    const db = require("../config/db");
+    if (typeof this.password != 'undefined' && this.password != "") {
+      console.log(this.password);
+      const bcrypt = require("bcrypt");
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    } else {
+      this.password = "";
+    }
+    const updateStatement = `UPDATE users SET ${Object.keys(this).filter( column => this[column] != "").map(column => `${column} = ?`).join(', ')} WHERE userid = ?`;
+    const updateParams = [...Object.values(this).filter( value => value != ""), this.userid];
+    db.query(updateStatement, updateParams, (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, result);
+      }
+    });
+  }
+
   async create(callback) {
     const db = require("../config/db");
-    var hashedPassword = "";
-    const bcrypt = require("bcrypt");
+    var hashedPassword = "";    
     if (this.password && this.password != "") {
       // Hash password
+      const bcrypt = require("bcrypt");
       const salt = await bcrypt.genSalt(10);
       hashedPassword = await bcrypt.hash(this.password, salt);
     }

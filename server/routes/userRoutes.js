@@ -1,7 +1,7 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const { User } = require('../models/User');
+const bcrypt = require("bcrypt");
+const { User } = require("../models/User");
 
 /**
  * @swagger
@@ -74,7 +74,7 @@ const { User } = require('../models/User');
  *            schema:
  *              type: string
  *              example: Internal Server Error
- * 
+ *
  *       400:
  *        description: Request body is missing
  *        content:
@@ -91,38 +91,114 @@ const { User } = require('../models/User');
  *              example: User already exists
  */
 
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   if (!req.body) {
-    return res.status(400).send('Request body is missing');
+    return res.status(400).send("Request body is missing");
   }
   const user = new User();
-  Object.assign(user, req.body)
+  Object.assign(user, req.body);
 
   try {
     // Check if user already exists
     user.findByEmail(user.email, async (err, userfound) => {
       if (err) {
-        return res.status(500).send('Error checking user');
+        return res.status(500).send("Error checking user");
       }
 
       if (userfound) {
-        return res.status(409).send('User already exists');
+        return res.status(409).send("User already exists");
       }
 
       // Create user in the database
       user.create(async (err, userId) => {
         if (err) {
           console.error("Registration Error:", err);
-          return res.status(500).send('Internal server error');
+          return res.status(500).send("Internal server error");
         }
-        return res.status(201).json({ userid: userId, message: 'Registration successful' });
+        return res
+          .status(201)
+          .json({ userid: userId, message: "Registration successful" });
       });
     });
   } catch (error) {
     console.error(error);
     // Only send this response if none of the above responses have been sent
     if (!res.headersSent) {
-      res.status(500).send('Internal server error');
+      res.status(500).send("Internal server error");
+    }
+  }
+});
+
+/**
+ * @swagger
+ * /api/updateUser:
+ *  post:
+ *    tags:
+ *      - user
+ *    summary: Update User.
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/user'
+ *    responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                userid:
+ *                  type: integer
+ *                  description: User ID
+ *                  example: 1
+ *                message:
+ *                  type: string
+ *                  description: Message
+ *                  example: Update successful
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              example: Internal Server Error
+ *
+ *       400:
+ *        description: Request body is missing
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              example: Request body is missing
+ */
+
+router.post("/updateUser", async (req, res) => {
+  if (!req.body) {
+    return res.status(400).send("Request body is missing");
+  }
+  const user = new User();
+  Object.assign(user, req.body);
+
+  try {
+    // Create user in the database
+    user.update(async (err, userId) => {
+      if (err) {
+        console.error("Update Error:", err);
+        return res.status(500).send("Internal server error");
+      }
+      return res
+        .status(200)
+        .json({ userid: userId, message: "Update successful" });
+    });
+  } catch (error) {
+    console.error(error);
+    // Only send this response if none of the above responses have been sent
+    if (!res.headersSent) {
+      res.status(500).send("Internal server error");
     }
   }
 });
@@ -142,7 +218,7 @@ router.post('/register', async (req, res) => {
  *         schema:
  *           confirmUri:
  *            type: string
- *      
+ *
  *     responses:
  *       200:
  *         description: the requested event Events
@@ -173,22 +249,22 @@ router.post('/register', async (req, res) => {
  *              example: Internal Server Error
  */
 
-router.get('/confirm/:confimrUri', async (req, res) => {
+router.get("/confirm/:confimrUri", async (req, res) => {
   const user = new User();
   user.findByConfirmUri(req.params.confimrUri, (err, userfound) => {
     if (err) {
-      return res.status(500).send('Internal Server error');
+      return res.status(500).send("Internal Server error");
     }
 
     if (!userfound) {
-      return res.status(401).send('User not found');
+      return res.status(401).send("User not found");
     }
     user.confirm(userfound.userid, async (err, result) => {
       if (err) {
-        return res.status(500).send('Internal Server error');
+        return res.status(500).send("Internal Server error");
       }
-      return res.redirect('http://loclaohst:3000/userconfirmed/');
-    });    
+      return res.redirect("http://loclaohst:3000/userconfirmed/");
+    });
   });
 });
 
@@ -229,7 +305,7 @@ router.get('/confirm/:confimrUri', async (req, res) => {
  *                  type: string
  *                  description: Message
  *                  example: confirmation needed
- * 
+ *
  *       200:
  *         description: Login successful
  *         content:
@@ -253,7 +329,7 @@ router.get('/confirm/:confimrUri', async (req, res) => {
  *            schema:
  *              type: string
  *              example: Internal Server Error
- * 
+ *
  *       400:
  *        description: User or Credentials invalid
  *        content:
@@ -270,42 +346,46 @@ router.get('/confirm/:confimrUri', async (req, res) => {
  *              example: User not found
  */
 
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   const user = new User();
   user.password = req.body.password;
   user.email = req.body.email;
 
   if (!user.email || !user.password) {
-    return res.status(400).send('Email and password are required');
+    return res.status(400).send("Email and password are required");
   }
 
   try {
     user.findByEmail(user.email, async (err, userfound) => {
-
       if (err) {
-        return res.status(500).send('Server error');
+        return res.status(500).send("Server error");
       }
 
       if (!userfound) {
-        return res.status(401).send('User not found');
+        return res.status(401).send("User not found");
       }
 
       if (userfound.emailConfirmed == 1) {
         // Compare submitted password with stored hash
         const isMatch = await bcrypt.compare(user.password, userfound.password);
         if (!isMatch) {
-          return res.status(400).send('Invalid credentials');
+          return res.status(400).send("Invalid credentials");
         }
       } else {
-        return res.status(209).json({confirmUri: userfound.confirmUri, message: 'confirmation needed'});
+        return res.status(209).json({
+          confirmUri: userfound.confirmUri,
+          message: "confirmation needed",
+        });
       }
 
       // Login successful, proceed with your login logic
-      return res.status(200).json({ userid: userfound.userid, message: 'Login successful' });
+      return res
+        .status(200)
+        .json({ userid: userfound.userid, message: "Login successful" });
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal server error');
+    res.status(500).send("Internal server error");
   }
 });
 
