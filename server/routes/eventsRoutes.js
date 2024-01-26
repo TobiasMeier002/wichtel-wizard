@@ -312,11 +312,11 @@ router.post("/", async (req, res) => {
   const event = new Event();
   Object.assign(event, req.body)
 
-  event.update((err, message) => {
+  event.update((err, result) => {
     if (err) {
       return res.status(500).send("Server error");
     } else {
-      return res.status(200).json({ message: message });
+      return res.status(200).json({ result });
     }
   });
 });

@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     userid INT auto_increment PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255),
-    surname VARCHAR(255) NOT NULL,
-    lastname VARCHAR(255) NOT NULL,
+    surname VARCHAR(255),
+    lastname VARCHAR(255),
     emailConfirmed BOOLEAN,
     confirmUri VARCHAR(255) NOT NULL
 );

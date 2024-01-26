@@ -44,7 +44,27 @@ const sendInvitationEmail = (user) => {
   });
 };
 
+const sendInvitationtoEventEmail = (user, eventname, participantid) => {
+  console.log('send invitation mail', user.email, process.env.EMAIL_USER);
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: 'Wichtel Wizard Event Invitation',
+    text: `You have been invited to the Event ${eventname}! Please confirm or decline with this Link: https://localhost:3000/participant/${participantid}`,
+    html: `<p>You have been invited to the Event ${eventname}!</p><p><a href="https://localhost:3000/participant/${participantid}">Please confirm or decline<a>` // You can use HTML content
+  };
+
+  transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.log('Error sending email:', error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+};
+
 module.exports = {
   sendConfirmationEmail,
-  sendInvitationEmail
+  sendInvitationEmail,
+  sendInvitationtoEventEmail
 };

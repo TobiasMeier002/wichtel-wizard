@@ -36,9 +36,12 @@ class User {
   }
 
   async create(callback) {
-    // Hash password
-    const salt = await this.bcrypt.genSalt(10);
-    const hashedPassword = await this.bcrypt.hash(this.password, salt);
+    const hashedPassword = "";
+    if (this.password && this.password != "") {
+      // Hash password
+      const salt = await this.bcrypt.genSalt(10);
+      hashedPassword = await this.bcrypt.hash(this.password, salt);
+    }    
     const crypto = require('crypto');
     this.confirmUri = crypto.randomUUID();
     this.emailConfirmed = false;
@@ -46,25 +49,15 @@ class User {
         if (err) {
           callback(err, null);
         } else {
-          const { sendConfirmationEmail } = require('../utils/mailer');
+          const { sendConfirmationEmail, sendInvitationEmail } = require('../utils/mailer');
           if(this.password && this.password != "") {
-            sendConfirmationEmail(result);
+            sendConfirmationEmail(this.email);
+          } else {
+            sendInvitationEmail(this.email);
           }          
           callback(null, result.insertId);
         }
       });
-  }
-
-  newId(base) {
-    return [
-      Math.random,
-      function () { return (newId.last ? windowId.last + Math.random() : Math.random()) },
-      Math.random,
-      Date.now,
-      Math.random
-    ].map(function (fn) {
-      return fn().toString(base || (16 + (Math.random() * 20))).substr(-8);
-    }).join('-');
   }
 }
 

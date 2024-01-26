@@ -1,6 +1,5 @@
 class Event {
 
-  db;
   eventid;
   name;
   creatoruserid;
@@ -8,19 +7,20 @@ class Event {
   eventdate;
   status;
 
-  constructor() {
-    this.db = require('../config/db');
+  constructor() {     
   }
 
   findbyID(eventid, callback) {
-    this.db.query('SELECT * FROM events AS ev JOIN users AS us on AS.creatoruserid JOIN assignments on WHERE ev.eventid = ?', eventid, function (err, result) {
+    const db = require('../config/db');
+    db.query('SELECT * FROM events AS ev JOIN users AS us on AS.creatoruserid JOIN assignments on WHERE ev.eventid = ?', eventid, function (err, result) {
       if (err) callback(err, null);
       else callback(null, result[0]);
     });
   }
 
   create(callback) {
-    this.db.query('INSERT INTO events SET ?', { name: this.name, creatoruserid: this.creatoruserid, pricelimit: this.pricelimit, eventdate: this.eventdate, status: this.status }, function (err, result) {
+    const db = require('../config/db');
+    db.query('INSERT INTO events SET ?', { name: this.name, creatoruserid: this.creatoruserid, pricelimit: this.pricelimit, eventdate: this.eventdate, status: this.status }, function (err, result) {
       if (err) {
         callback(err, null);
       } else {
@@ -30,19 +30,30 @@ class Event {
     });
   }
 
-  update(eventid, callback) {
-    //TODO updaet Event
+  update(callback) {
+    const db = require('../config/db');
+    const updateStatement = `UPDATE events SET ${Object.keys(this).map(column => `${column} = ?`).join(', ')} WHERE eventid = ?`;
+    const updateParams = [...Object.values(this), this.eventid];
+    db.query(updateStatement, updateParams, (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, result);
+      }
+    });
   }
 
   getAll(callback) {
-    this.db.query('SELECT * from events', function (err, result) {
+    const db = require('../config/db');
+    db.query('SELECT * from events', function (err, result) {
       if (err) callback(err, null);
       else callback(null, result);
     })
   }
 
   getbyID(callback) {
-    this.db.query('SELECT * from events WHERE eventid = ?', this.eventid, function (err, result) {
+    const db = require('../config/db');
+    db.query('SELECT * from events WHERE eventid = ?', this.eventid, function (err, result) {
       if (err) {
         callback(err, null);
       } else if (!result[0]) {
@@ -54,30 +65,50 @@ class Event {
   }
 
   addParticipant(user, callback) {
-    user.findByEmail(participant.email, (err, userfound) => {
-      if (userfound) {
-        this.db.query('INSERT INTO participants SET ?', { eventid: this.eventid, participantid: userfound.userid, hasConfirmed: false }, function (err, result) {
-          if (err) callback(err, null);
-          else callback(null, result.insertId);
-        });
+    const db = require('../config/db');
+    db.query('SELECT * FROM events where eventid = ?', [this.eventid], (err, result) => {
+      if (err) {
+        callback(err, null);
       } else {
-        user.create( (err, usercreated) => {
-          if (err) {
-            callback(err, null);
-          } else {
-            this.db.query('INSERT INTO participants SET ?', { eventid: this.eventid, participantid: usercreated.userid, hasConfirmed: false }, function (err, result) {
-              if (err) {
-                callback(err, null);
-              } else {
-                const { sendInvitationEmail } = require('../utils/mailer');
-                sendInvitationEmail(result);
-                callback(null, result.insertId);
-              }
-            });
-          }
-        });
+        Object.assign(this, result[0]);
       }
+      const eventName = this.name;
+      user.findByEmail(user.email, (err, userfound) => {
+        if (userfound) {
+          db.query('INSERT INTO participants SET ?', { eventid: this.eventid, userid: userfound.userid, status: 'invited' }, function (err, result) {
+            if (err) {
+              callback(err, null);
+            } else {
+              const { sendInvitationtoEventEmail } = require('../utils/mailer');
+              sendInvitationtoEventEmail(userfound, eventName, result.insertId);
+              callback(null, result.insertId);
+            }
+          });
+        } else {
+          user.create( (err, usercreated) => {
+            if (err) {
+              callback(err, null);
+            } else {
+              db.query('INSERT INTO participants SET ?', { eventid: this.eventid, userid: usercreated.userid, status: 'invited' }, function (err, result) {
+                if (err) {
+                  callback(err, null);
+                } else {
+                  const { sendInvitationtoEventEmail } = require('../utils/mailer');
+                  sendInvitationtoEventEmail(usercreated, eventName, result.insertId);
+                  callback(null, result.insertId);
+                }
+              });
+            }
+          });
+        }
+      });
     });
+    
+  }
+
+  start(callback) {
+    db = require('../config/db');
+
   }
 
 }
