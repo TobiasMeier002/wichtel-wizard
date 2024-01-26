@@ -137,7 +137,7 @@ router.get("/", async (req, res) => {
  *       - in: path
  *         name: eventid
  *         required: true
- *         description: Numeric ID of the user to retrieve.
+ *         description: numeric if of the event
  *         schema:
  *           type: integer
  *     responses:
@@ -146,8 +146,7 @@ router.get("/", async (req, res) => {
  *         content:
  *           application/json:
  *            schema:
- *              type:
- *                $ref: '#/components/schemas/event'
+ *              $ref: '#/components/schemas/event'
  *
  *       500:
  *        description: Internal Server Error
@@ -170,6 +169,54 @@ router.get("/:eventid", async (req, res) => {
   });
 });
 
+/**
+ * @swagger
+ * /api/events/addParticipantbyEmail:
+ *   post:
+ *     tags:
+ *      - events
+ *     summary: Add a Participant to an event.
+ *     requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            properties:
+ *              eventid:
+ *                type: integer
+ *                description: Event ID
+ *                example: 1
+ *              email:
+ *                type: string
+ *                description: Participant E-Mail Address
+ *                example: john.doe@mail.com
+ *     responses:
+ *       200:
+ *         description: Participant Added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                eventid:
+ *                  type: integer
+ *                  description: Event ID
+ *                  example: 1
+ *                message:
+ *                  type: string
+ *                  description: Message
+ *                  example: Event created Successfull
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              description: Error string
+ *              example: Internal Server Error
+ */
+
 router.post("/addParticipantbyEmail", async (req, res) => {
   const event = new Event();
   const participant = new User();
@@ -184,6 +231,40 @@ router.post("/addParticipantbyEmail", async (req, res) => {
   });
 });
 
+/**
+ * @swagger
+ * /api/events/{eventid}/start:
+ *   get:
+ *     tags:
+ *      - events
+ *     summary: start an event
+ *     parameters:
+ *       - in: path
+ *         name: eventid
+ *         required: true
+ *         description: Numeric ID of the event to start.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: the requested event Events
+ *         content:
+ *           application/json:
+ *            schema:
+ *              type: string
+ *              description: event message
+ *              example: start
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              description: Error message
+ *              example: Internal Server Error
+ */
+
 router.get("/:eventid/start", async (req, res) => {
   const event = new Event();
   Event.eventid = req.params.eventid;
@@ -196,13 +277,40 @@ router.get("/:eventid/start", async (req, res) => {
   });
 });
 
-//UpdateEvent
+/**
+ * @swagger
+ * /api/events/:
+ *   post:
+ *     tags:
+ *      - events
+ *     summary: Update an existing event.
+ *     requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/event' 
+ *     responses:
+ *       200:
+ *         description: Event Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *              $ref: '#/components/schemas/event' 
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              description: Error string
+ *              example: Internal Server Error
+ */
+
 router.post("/", async (req, res) => {
   const event = new Event();
-  event.eventid = req.body.eventid;
-  event.name = req.body.name;
-  event.pricelimit = req.body.pricelimit;
-  event.eventdate = req.body.eventdate;
+  Object.assign(event, req.body)
 
   event.update((err, message) => {
     if (err) {
