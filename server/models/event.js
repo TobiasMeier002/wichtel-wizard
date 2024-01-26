@@ -108,7 +108,7 @@ class Event {
 
   start(callback) {
     db = require('../config/db');
-
+    
   }
 
 }
