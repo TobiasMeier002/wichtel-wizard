@@ -187,7 +187,7 @@ router.get('/confirm/:confimrUri', async (req, res) => {
       if (err) {
         return res.status(500).send('Internal Server error');
       }
-      return res.status(200).json({message: 'E-Mail confirmed'});
+      return res.redirect('http://loclaohst:3000/userconfirmed/');
     });    
   });
 });

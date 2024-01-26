@@ -3,6 +3,7 @@ const express = require('express');
 const bodyparser = require('body-parser');
 const userRoutes = require('./routes/userRoutes');
 const eventsRoutes = require('./routes/eventsRoutes');
+const participantRoutes = require('./routes/participantRoutes');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
@@ -30,6 +31,7 @@ app.use(cors());
 app.use(bodyparser.json());
 app.use('/api', userRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/participant', participantRoutes);
 app.use(bodyparser.urlencoded({extended: true}));
 
 app.listen(process.env.REACT_APP_SERVER_PORT, () => {

@@ -74,6 +74,9 @@ class Event {
       }
       const eventName = this.name;
       user.findByEmail(user.email, (err, userfound) => {
+        if (err) {
+          callback(err, null);
+        }
         if (userfound) {
           db.query('INSERT INTO participants SET ?', { eventid: this.eventid, userid: userfound.userid, status: 'invited' }, function (err, result) {
             if (err) {
@@ -89,13 +92,20 @@ class Event {
             if (err) {
               callback(err, null);
             } else {
-              db.query('INSERT INTO participants SET ?', { eventid: this.eventid, userid: usercreated.userid, status: 'invited' }, function (err, result) {
+              const userid = usercreated;
+              db.query('INSERT INTO participants SET ?', { eventid: this.eventid, userid: userid, status: 'invited' }, function (err, result) {
                 if (err) {
                   callback(err, null);
                 } else {
-                  const { sendInvitationtoEventEmail } = require('../utils/mailer');
-                  sendInvitationtoEventEmail(usercreated, eventName, result.insertId);
-                  callback(null, result.insertId);
+                  db.query('SELECT * from users WHERE userid = ?', [userid], (err, usercreated) => {
+                    if (err) {
+                      callback(err, null);
+                    } else {
+                      const { sendInvitationtoEventEmail } = require('../utils/mailer');
+                      sendInvitationtoEventEmail(usercreated[0], eventName, result.insertId);
+                      callback(null, usercreated[0]);
+                    }                    
+                  });                  
                 }
               });
             }

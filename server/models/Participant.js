@@ -1,13 +1,35 @@
 class Participant {
 
-  db;
+  participantid;
+  userid;
+  eventid;
+  giftwish;
+  status;
 
   constructor() {
-    this.db = require('../config/db');
+
   }
 
-  createParticipant(newParticipant, callback) {
+  confirm(callback) {
+    const db = require('../config/db');
+    db.query("UPDATE participants SET status = 'accepted' WHERE participantid = ?",[this.participantid], (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, 'Confirmed');
+      }
+    });
+  }
 
+  decline(callback) {
+    const db = require('../config/db');
+    db.query("UPDATE participants SET status = 'declined' WHERE participantid = ?",[this.participantid], (err, result) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, 'Confirmed');
+      }
+    });
   }
 
 }
