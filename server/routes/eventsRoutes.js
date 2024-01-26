@@ -170,6 +170,76 @@ router.get("/:eventid", async (req, res) => {
 
 /**
  * @swagger
+ * /api/events/{eventid}/getparticipants:
+ *   get:
+ *     tags:
+ *      - events
+ *     summary: get particpants per Event
+ *     parameters:
+ *       - in: path
+ *         name: eventid
+ *         required: true
+ *         description: numeric if of the event
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: the requested event Events
+ *         content:
+ *           application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                type: object
+ *                properties:
+ *                  userid:
+ *                    type: integer
+ *                    description: userid
+ *                    example: 1
+ *                  surname:
+ *                    type: string
+ *                    description: surname
+ *                    example: John
+ *                  lastname:
+ *                    type: string
+ *                    description: lastname
+ *                    example: Doe
+ *                  email:
+ *                    type: string
+ *                    description: E-Mail
+ *                    example: john.doe@mail.com
+ *                  participantid:
+ *                    type: integer
+ *                    description: participantid
+ *                    example: 1
+ *                  status:
+ *                    type: string
+ *                    description: Participant Status
+ *                    example: accpeted
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              example: Internal Server Error
+ */
+
+router.get("/:eventid/getparticipants", async (req, res) => {
+  const event = new Event();
+  event.eventid = req.params.eventid;
+  return event.getParticipantsbyEventID((err, participants) => {
+    if (err) {
+      return res.status(500).send("Internal Server Error");
+    } else {
+      return res.status(200).json(participants);
+    }
+  });
+});
+
+/**
+ * @swagger
  * /api/events/addParticipantbyEmail:
  *   post:
  *     tags:
@@ -288,14 +358,14 @@ router.get("/:eventid/start", async (req, res) => {
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/event' 
+ *            $ref: '#/components/schemas/event'
  *     responses:
  *       200:
  *         description: Event Updated
  *         content:
  *           application/json:
  *             schema:
- *              $ref: '#/components/schemas/event' 
+ *              $ref: '#/components/schemas/event'
  *
  *       500:
  *        description: Internal Server Error
@@ -309,7 +379,7 @@ router.get("/:eventid/start", async (req, res) => {
 
 router.post("/", async (req, res) => {
   const event = new Event();
-  Object.assign(event, req.body)
+  Object.assign(event, req.body);
 
   event.update((err, result) => {
     if (err) {
