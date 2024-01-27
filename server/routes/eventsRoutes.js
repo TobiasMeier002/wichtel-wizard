@@ -353,7 +353,7 @@ router.post("/addParticipantbyEmail", async (req, res) => {
 
 router.get("/:eventid/start", async (req, res) => {
   const event = new Event();
-  Event.eventid = req.params.eventid;
+  event.eventid = req.params.eventid;
   event.start((err, message) => {
     if (err) {
       return res.status(500).send("Server error");

@@ -260,6 +260,14 @@ router.post("/updateUser", async (req, res) => {
  *                    type: string
  *                    description: The Users Event Status
  *                    example: confirmed
+ *                  receiver_name:
+ *                    type: string
+ *                    description: Name of the Gift receiver
+ *                    example: Child1 Meier
+ *                  receiver_giftwish:
+ *                    type: string
+ *                    description: Giftwish of the Receiver
+ *                    example: one million dollar
  *
  *       500:
  *        description: Internal Server Error

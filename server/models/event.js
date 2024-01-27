@@ -156,7 +156,7 @@ class Event {
                               eventName,
                               result.insertId
                             );
-                            callback(null, usercreated[0]);
+                            callback(null, result.insertId);
                           }
                         }
                       );
@@ -188,7 +188,50 @@ class Event {
 
   start(callback) {
     const db = require("../config/db");
+    const eventid = this.eventid;
+    db.query("SELECT * FROM participants WHERE status = 'accepted' AND eventid = ?", [eventid], (err, result) => {
+      const assignment = Event.prototype.assignWichtelis(result);
+      const insertKeys = ['participantid','eventid','wichtelsTo'];
+      const insertStatement = `INSERT INTO assignments (giverid, eventid, receiverid) VALUES ${assignment.map(() => '(?)').join(', ')}`;
+      const values = assignment.map( a => insertKeys.map( k => a[k]).flat());
+      db.query(insertStatement,values,(err, result) =>{
+        if (err) {
+          console.log(err);
+          callback(err,null);
+        } else {
+          db.query("UPDATE events SET status = 'assigned' WHERE eventid = ?",[eventid], (err, result) => {
+            if (err) {
+              callback(err,null);
+            } else {
+              callback(null,'Wichtel assigned');
+            }
+          });
+        }
+      });
+    });
   }
+
+  assignWichtelis(participants) {
+    for (const participant of participants) {
+      try {
+        const wichtelCandidates = participants.filter(u => u !== participant && !u.hasWichteli);
+        const wichtelIndex = Math.floor(Math.random() * wichtelCandidates.length);
+        const wichtel = wichtelCandidates[wichtelIndex];
+  
+        wichtel.hasWichteli = true;
+        participant.wichtelsTo = wichtel.participantid;
+  
+        console.log(`${participant.participantid} \t-->\t${wichtel.participantid}`);
+      } catch (error) {
+        console.log(`${participant.participantid}\t-->\t${participant.participantid} isn't allowed --> reshuffle`);
+        participants.forEach(p => p.hasWichteli = false);
+        Event.prototype.assignWichtelis(participants); // Recursive reshuffle
+        return participants; // Stop further processing in the current iteration
+      }
+    }
+    return participants;
+  }
+
 }
 
 module.exports = { Event };

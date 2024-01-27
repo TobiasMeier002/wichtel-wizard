@@ -90,7 +90,7 @@ class User {
   getEvents(callback) {
     const db = require("../config/db");
     db.query(
-      "SELECT ev.eventid AS eventid, ev.name AS Eventname, ev.eventdate as eventdate, ev.pricelimit as pricelimit, ev.status as eventstatus, pa.userid as userid, pa.giftwish as giftwish, pa.status as userstatus FROM events AS ev INNER JOIN participants AS pa ON ev.eventid = pa.eventid where pa.userid = ?",
+      "SELECT ev.eventid AS eventid, ev.name AS Eventname, ev.eventdate as eventdate, ev.pricelimit as pricelimit, ev.status as eventstatus, pa.userid as userid, pa.giftwish as giftwish, pa.status as userstatus, ag.receiver_name as receiver_name, ag.giftwish as receiver_giftwish FROM events AS ev INNER JOIN participants AS pa ON ev.eventid = pa.eventid LEFT JOIN (SELECT a.giverid , CONCAT(`surname`, ' ', `lastname`) AS receiver_name, p.giftwish FROM assignments AS a INNER JOIN participants AS p on a.receiverid = p.participantid INNER JOIN users as u on p.userid = u.userid) AS ag on pa.participantid = ag.giverid where pa.userid = ?",
       [this.userid],
       (err, result) => {
         if (err) {
