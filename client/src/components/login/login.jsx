@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { config } from '../../config';
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,6 +16,12 @@ const LoginForm = () => {
       const response = await axios.post(config.api_url + 'login', { email, password });
       setMessage(response.data.message);
       setIsError(false);
+
+      if (response.data.message === 'confirmation needed') {
+        setMessage("You need to confirm your e-mail");
+      } else {
+        navigate(`/dashboard/${response.data.userid}`);
+      }
 
     } catch (error) {
       setMessage(error.request.response);
