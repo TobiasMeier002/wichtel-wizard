@@ -36,7 +36,13 @@ class Event {
           callback(err, null);
         } else {
           this.eventid = result.insertId;
-          callback(null, this.eventid);
+          db.query('SELECT * from events WHERE eventid = ?',[this.eventid], (err, eventdetails) => { 
+            if (err) {
+              callback(err,null);
+            } else {
+              callback(null, eventdetails[0]);
+            }           
+          });                    
         }
       }
     );

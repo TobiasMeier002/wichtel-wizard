@@ -33,6 +33,18 @@ class User {
     );
   }
 
+  findById(callback) {
+    const db = require("../config/db");
+    db.query(
+      "SELECT * FROM users WHERE userid = ?",
+      [this.userid],
+      function (err, result) {
+        if (err) callback(err, null);
+        else callback(null, result[0]);
+      }
+    );
+  }
+
   confirm(userid, callback) {
     const db = require("../config/db");
     db.query(

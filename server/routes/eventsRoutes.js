@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { User } = require("../models/User");
 const { Event } = require("../models/Event");
+const { callbackPromise } = require("nodemailer/lib/shared");
 
 /**
  * @swagger
@@ -74,17 +75,33 @@ const { Event } = require("../models/Event");
 
 router.post("/register", async (req, res) => {
   const event = new Event();
-  Object.assign(evetnt, req.body);
+  Object.assign(event, req.body);
   event.status = "created";
-
-  event.create((err, eventid) => {
+  event.create((err, eventdetails) => {
     if (err) {
       console.error("Event registration Error:", err);
       return res.status(500).send("Internal server error");
+    } else {
+      Object.assign(event, eventdetails);
+      const user = new User();
+      user.userid = event.creatoruserid;
+      user.findById( (err, result) => {
+        if (err) {
+          callback(err);
+        } else {
+          Object.assign(user, result);
+          event.addParticipant(user, (err, result) => {
+            if (err) {
+              return res.status(500).send("Internal server error");
+            } else {
+              return res
+              .status(201)
+              .json({ eventid: event.eventid, message: "Event created Successfull" });
+            }
+          });
+        }
+      });      
     }
-    return res
-      .status(201)
-      .json({ eventid: eventid, message: "Event created Successfull" });
   });
 });
 
