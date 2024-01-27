@@ -19,3 +19,4 @@ Commands
 - ```npm start``` (to start server in server directory (prod only))
 - 
 Open http://localhost:3000/ to access the frontend part of the application
+Open http://localhost:8000/api-docs/ to access the API documentation
