@@ -146,7 +146,7 @@ class User {
         } else {
           //if succesfull, the user will get an Confirm or Invitation Mail
           db.query(
-            "SELECT email, confirmUri FROM users where userid = ?",
+            "SELECT email, confirmUri, password FROM users where userid = ?",
             [result.insertId],
             (err, user) => {
               if (err) {
@@ -156,7 +156,7 @@ class User {
                   sendConfirmationEmail,
                   sendInvitationEmail,
                 } = require("../utils/mailer");
-                if (user[0].password != "" || user[0].password != null || !(typeof user[0].password == 'undefined')) {
+                if (user[0].password != "") {
                   //send confimration E-Mail if the user has registered at the login page
                   sendConfirmationEmail(user[0]);
                 } else {

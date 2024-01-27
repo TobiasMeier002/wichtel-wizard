@@ -33,7 +33,7 @@ const sendInvitationEmail = (user) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: user.email,
-    subject: 'Account Invitaion',
+    subject: 'Account Invitation',
     text: `You have been invited to the Wichtel Wizard! Your account needs to be created. Please create your Account with this Link: http://localhost:3000/confirm/${user.email}/${user.confirmUri}`,
     html: `<p>You have been invited to the Wichtel Wizard! Your account needs to be created.</p><p><a href="http://localhost:3000/confirm/${user.email}/${user.confirmUri}">Please create your Account<a>` // You can use HTML content
   };
