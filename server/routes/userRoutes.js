@@ -205,6 +205,89 @@ router.post("/updateUser", async (req, res) => {
 
 /**
  * @swagger
+ * /api/{userid}/getEvents:
+ *   get:
+ *     tags:
+ *      - user
+ *     summary: get all Events where a User participate
+ *     parameters:
+ *       - in: path
+ *         name: userid
+ *         required: true
+ *         description: the users id
+ *         schema:
+ *           userid:
+ *            type: string
+ *
+ *     responses:
+ *       200:
+ *         description: List of Events with User Status
+ *         content:
+ *           application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                properties:
+ *                  eventid:
+ *                    type: integer
+ *                    description: The events ID
+ *                    example: 1
+ *                  Eventname:
+ *                    type: string
+ *                    description: The Name of the Event
+ *                    example: Weihnachtsfest Familie
+ *                  Eventdate:
+ *                    type: string
+ *                    description: The Date of the Event
+ *                    example: 2024-12-24T00:00:00.000Z
+ *                  pricelimit:
+ *                    type: string
+ *                    description: The Event Pricelimit
+ *                    example: 50.00
+ *                  eventstatus:
+ *                    type: string
+ *                    description: The Event Status
+ *                    example: created
+ *                  userid:
+ *                    type: integer
+ *                    description: The Users ID
+ *                    example: 1
+ *                  giftiwsh:
+ *                    type: string
+ *                    description: The Users giftwish
+ *                    example: "one million Dollar"
+ *                  userstatus:
+ *                    type: string
+ *                    description: The Users Event Status
+ *                    example: confirmed
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              description: Error message
+ *              example: Internal Server Error
+ */
+
+router.get("/:userid/getEvents", async (req, res) => {
+  const user = new User();
+  user.userid = req.params.userid;
+  user.findById( (err, result) => {
+    if (err) {
+      return res.status(500).send("Internal Server error");
+    }else{
+      Object.assign(user, result);
+      user.getEvents( (err, result) => {
+        return res.status(200).json(result);
+      });
+    }
+  });
+});
+
+/**
+ * @swagger
  * /api/confirm/{confirmUri}:
  *   get:
  *     tags:

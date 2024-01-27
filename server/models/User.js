@@ -39,8 +39,11 @@ class User {
       "SELECT * FROM users WHERE userid = ?",
       [this.userid],
       function (err, result) {
-        if (err) callback(err, null);
-        else callback(null, result[0]);
+        if (err) {
+          callback(err, null);
+        } else {
+          callback(null, result[0]);
+        }
       }
     );
   }
@@ -59,7 +62,7 @@ class User {
 
   async update(callback) {
     const db = require("../config/db");
-    if (typeof this.password != 'undefined' && this.password != "") {
+    if (typeof this.password != "undefined" && this.password != "") {
       console.log(this.password);
       const bcrypt = require("bcrypt");
       const salt = await bcrypt.genSalt(10);
@@ -67,8 +70,14 @@ class User {
     } else {
       this.password = "";
     }
-    const updateStatement = `UPDATE users SET ${Object.keys(this).filter( column => this[column] != "").map(column => `${column} = ?`).join(', ')} WHERE userid = ?`;
-    const updateParams = [...Object.values(this).filter( value => value != ""), this.userid];
+    const updateStatement = `UPDATE users SET ${Object.keys(this)
+      .filter((column) => this[column] != "")
+      .map((column) => `${column} = ?`)
+      .join(", ")} WHERE userid = ?`;
+    const updateParams = [
+      ...Object.values(this).filter((value) => value != ""),
+      this.userid,
+    ];
     db.query(updateStatement, updateParams, (err, result) => {
       if (err) {
         callback(err, null);
@@ -78,9 +87,24 @@ class User {
     });
   }
 
+  getEvents(callback) {
+    const db = require("../config/db");
+    db.query(
+      "SELECT ev.eventid AS eventid, ev.name AS Eventname, ev.eventdate as eventdate, ev.pricelimit as pricelimit, ev.status as eventstatus, pa.userid as userid, pa.giftwish as giftwish, pa.status as userstatus FROM events AS ev INNER JOIN participants AS pa ON ev.eventid = pa.eventid where pa.userid = ?",
+      [this.userid],
+      (err, result) => {
+        if (err) {
+          callback(err, null);
+        } else {
+          callback(null, result);
+        }
+      }
+    );
+  }
+
   async create(callback) {
     const db = require("../config/db");
-    var hashedPassword = "";    
+    var hashedPassword = "";
     if (this.password && this.password != "") {
       // Hash password
       const bcrypt = require("bcrypt");
