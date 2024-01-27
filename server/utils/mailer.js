@@ -7,6 +7,7 @@ const transporter = nodemailer.createTransport({
   secure: false
 });
 
+//Create and send E-Mail Confirmation Mail
 const sendConfirmationEmail = (user) => {
   console.log('send register mail', user.email, process.env.EMAIL_USER);
   const mailOptions = {
@@ -25,6 +26,8 @@ const sendConfirmationEmail = (user) => {
     }
   });
 };
+
+//Create and send Invitaion Mail, will be used, if a participant has no user
 const sendInvitationEmail = (user) => {
   console.log('send invitation mail', user.email, process.env.EMAIL_USER);
   const mailOptions = {
@@ -44,6 +47,7 @@ const sendInvitationEmail = (user) => {
   });
 };
 
+//Create and send Invitation to Event Mail
 const sendInvitationtoEventEmail = (user, eventname, participantid) => {
   console.log('send Event invitation mail', user.email, process.env.EMAIL_USER);
   const mailOptions = {

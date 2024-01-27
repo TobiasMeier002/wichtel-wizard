@@ -7,7 +7,8 @@ class Event {
   status;
 
   constructor() {}
-
+  
+  //Find Event by ID
   findbyID(eventid, callback) {
     const db = require("../config/db");
     db.query(
@@ -20,6 +21,7 @@ class Event {
     );
   }
 
+  //create new event
   create(callback) {
     const db = require("../config/db");
     db.query(
@@ -36,20 +38,26 @@ class Event {
           callback(err, null);
         } else {
           this.eventid = result.insertId;
-          db.query('SELECT * from events WHERE eventid = ?',[this.eventid], (err, eventdetails) => { 
-            if (err) {
-              callback(err,null);
-            } else {
-              callback(null, eventdetails[0]);
-            }           
-          });                    
+          db.query(
+            "SELECT * from events WHERE eventid = ?",
+            [this.eventid],
+            (err, eventdetails) => {
+              if (err) {
+                callback(err, null);
+              } else {
+                callback(null, eventdetails[0]);
+              }
+            }
+          );
         }
       }
     );
   }
 
+  //update event
   update(callback) {
     const db = require("../config/db");
+    // prepare Statement, all values must be submitted
     const updateStatement = `UPDATE events SET ${Object.keys(this)
       .map((column) => `${column} = ?`)
       .join(", ")} WHERE eventid = ?`;
@@ -63,6 +71,7 @@ class Event {
     });
   }
 
+  //returns all events
   getAll(callback) {
     const db = require("../config/db");
     db.query("SELECT * from events", function (err, result) {
@@ -71,6 +80,7 @@ class Event {
     });
   }
 
+  //returns a singlie event by id
   getbyID(callback) {
     const db = require("../config/db");
     db.query(
@@ -88,8 +98,11 @@ class Event {
     );
   }
 
+  //adding a user as a participant to en event
+  //if the participant is not registered as user, a new user without details will be created
   addParticipant(user, callback) {
     const db = require("../config/db");
+    //gets the event
     db.query(
       "SELECT * FROM events where eventid = ?",
       [this.eventid],
@@ -99,7 +112,9 @@ class Event {
         } else {
           Object.assign(this, result[0]);
         }
+        //set the eventname globally for callback functions
         const eventName = this.name;
+        //if the user is already registered add to event as participant and send an email
         user.findByEmail(user.email, (err, userfound) => {
           if (err) {
             callback(err, null);
@@ -119,6 +134,7 @@ class Event {
                   const {
                     sendInvitationtoEventEmail,
                   } = require("../utils/mailer");
+                  //send invitation email
                   sendInvitationtoEventEmail(
                     userfound,
                     eventName,
@@ -129,6 +145,7 @@ class Event {
               }
             );
           } else {
+            //if the user is not found, create user, add participant and send invitations
             user.create((err, usercreated) => {
               if (err) {
                 callback(err, null);
@@ -171,6 +188,7 @@ class Event {
     );
   }
 
+  //get all participant by Event ID
   getParticipantsbyEventID(callback) {
     const db = require("../config/db");
     db.query(
@@ -186,52 +204,82 @@ class Event {
     );
   }
 
+  //Start an event, assign wichtel
   start(callback) {
     const db = require("../config/db");
     const eventid = this.eventid;
-    db.query("SELECT * FROM participants WHERE status = 'accepted' AND eventid = ?", [eventid], (err, result) => {
-      const assignment = Event.prototype.assignWichtelis(result);
-      const insertKeys = ['participantid','eventid','wichtelsTo'];
-      const insertStatement = `INSERT INTO assignments (giverid, eventid, receiverid) VALUES ${assignment.map(() => '(?)').join(', ')}`;
-      const values = assignment.map( a => insertKeys.map( k => a[k]).flat());
-      db.query(insertStatement,values,(err, result) =>{
-        if (err) {
-          console.log(err);
-          callback(err,null);
-        } else {
-          db.query("UPDATE events SET status = 'assigned' WHERE eventid = ?",[eventid], (err, result) => {
-            if (err) {
-              callback(err,null);
-            } else {
-              callback(null,'Wichtel assigned');
-            }
-          });
-        }
-      });
-    });
+    //get the participants
+    db.query(
+      "SELECT * FROM participants WHERE status = 'accepted' AND eventid = ?",
+      [eventid],
+      (err, result) => {
+        //assign the secret santas wit the static method
+        const assignment = Event.prototype.assignWichtelis(result);
+        const insertKeys = ["participantid", "eventid", "wichtelsTo"];
+        //generate assignments insert statment 
+        const insertStatement = `INSERT INTO assignments (giverid, eventid, receiverid) VALUES ${assignment
+          .map(() => "(?)")
+          .join(", ")}`;
+        const values = assignment.map((a) =>
+          insertKeys.map((k) => a[k]).flat()
+        );
+        db.query(insertStatement, values, (err, result) => {
+          if (err) {
+            console.log(err);
+            callback(err, null);
+          } else {
+            db.query(
+              "UPDATE events SET status = 'assigned' WHERE eventid = ?",
+              [eventid],
+              (err, result) => {
+                if (err) {
+                  callback(err, null);
+                } else {
+                  callback(null, "Wichtel assigned");
+                }
+              }
+            );
+          }
+        });
+      }
+    );
   }
 
+  //assigns a secret santa, can also be used static
   assignWichtelis(participants) {
     for (const participant of participants) {
       try {
-        const wichtelCandidates = participants.filter(u => u !== participant && !u.hasWichteli);
-        const wichtelIndex = Math.floor(Math.random() * wichtelCandidates.length);
+        // filter the candidate list for candidates which already has a secret santa and is not itseld
+        const wichtelCandidates = participants.filter(
+          (u) => u !== participant && !u.hasWichteli
+        );
+        //select random participant from the candidate list
+        const wichtelIndex = Math.floor(
+          Math.random() * wichtelCandidates.length
+        );
         const wichtel = wichtelCandidates[wichtelIndex];
-  
+        //assign the canidate to his secret santa, set the filter to true
         wichtel.hasWichteli = true;
         participant.wichtelsTo = wichtel.participantid;
-  
-        console.log(`${participant.participantid} \t-->\t${wichtel.participantid}`);
+        // for debug purpose
+        console.log(
+          `${participant.participantid} \t-->\t${wichtel.participantid}`
+        );
       } catch (error) {
-        console.log(`${participant.participantid}\t-->\t${participant.participantid} isn't allowed --> reshuffle`);
-        participants.forEach(p => p.hasWichteli = false);
+        //there will be an error, if the last candidate hits himself, therefore a reshuffle is necessary
+        console.log(
+          `${participant.participantid}\t-->\t${participant.participantid} isn't allowed --> reshuffle`
+        );
+        //reset the filter attribute
+        participants.forEach((p) => (p.hasWichteli = false));
+        //start recurse
         Event.prototype.assignWichtelis(participants); // Recursive reshuffle
         return participants; // Stop further processing in the current iteration
       }
     }
+    //return the valid secret santa assignment list
     return participants;
   }
-
 }
 
 module.exports = { Event };

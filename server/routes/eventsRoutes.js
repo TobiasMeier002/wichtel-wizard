@@ -85,7 +85,7 @@ router.post("/register", async (req, res) => {
       Object.assign(event, eventdetails);
       const user = new User();
       user.userid = event.creatoruserid;
-      user.findById( (err, result) => {
+      user.findById((err, result) => {
         if (err) {
           callback(err);
         } else {
@@ -94,13 +94,14 @@ router.post("/register", async (req, res) => {
             if (err) {
               return res.status(500).send("Internal server error");
             } else {
-              return res
-              .status(201)
-              .json({ eventid: event.eventid, message: "Event created Successfull" });
+              return res.status(201).json({
+                eventid: event.eventid,
+                message: "Event created Successfull",
+              });
             }
           });
         }
-      });      
+      });
     }
   });
 });
@@ -337,9 +338,12 @@ router.post("/addParticipantbyEmail", async (req, res) => {
  *         content:
  *           application/json:
  *            schema:
- *              type: string
- *              description: event message
- *              example: start
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  description: event message
+ *                  example: Wichtel assigned
  *
  *       500:
  *        description: Internal Server Error

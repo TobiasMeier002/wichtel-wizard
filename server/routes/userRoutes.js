@@ -182,9 +182,13 @@ router.post("/updateUser", async (req, res) => {
   }
   const user = new User();
   Object.assign(user, req.body);
-
+  console.log(typeof user.userid);
+  if (user.userid == null) {
+    user.userid = "";
+  }
+  console.log(typeof user.userid);
   try {
-    // Create user in the database
+    // update user in the database
     user.update(async (err, userId) => {
       if (err) {
         console.error("Update Error:", err);
@@ -282,14 +286,91 @@ router.post("/updateUser", async (req, res) => {
 router.get("/:userid/getEvents", async (req, res) => {
   const user = new User();
   user.userid = req.params.userid;
-  user.findById( (err, result) => {
+  user.findById((err, result) => {
     if (err) {
       return res.status(500).send("Internal Server error");
-    }else{
+    } else {
       Object.assign(user, result);
-      user.getEvents( (err, result) => {
+      user.getEvents((err, result) => {
         return res.status(200).json(result);
       });
+    }
+  });
+});
+
+/**
+ * @swagger
+ * /api/{userid}:
+ *   get:
+ *     tags:
+ *      - user
+ *     summary: get User information
+ *     parameters:
+ *       - in: path
+ *         name: userid
+ *         required: true
+ *         description: the users id
+ *         schema:
+ *           userid:
+ *            type: string
+ *
+ *     responses:
+ *       200:
+ *         description: List of Events with User Status
+ *         content:
+ *           application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                userid:
+ *                  type: integer
+ *                  description: id is auto incermented
+ *                  example: 0
+ *                email:
+ *                  type: string
+ *                  description: not null, email address
+ *                  example: john.doe@example.com
+ *                password:
+ *                  type: string
+ *                  description: Password will be null
+ *                  example: null
+ *                surname:
+ *                  type: string
+ *                  description: the users surname
+ *                  example: John
+ *                lastname:
+ *                  type: string
+ *                  description: lastname
+ *                  example: Doe
+ *                emailConfirmed:
+ *                  type: boolean
+ *                  description: The User Email has to be confirmed
+ *                  example: true
+ *                confirmUri:
+ *                  type: string
+ *                  description: GUUID
+ *                  example: ba8ad9b7-10f7-42f7-a066-0c10c63cf252
+ *
+ *       500:
+ *        description: Internal Server Error
+ *        content:
+ *          plain/text:
+ *            schema:
+ *              type: string
+ *              description: Error message
+ *              example: Internal Server Error
+ */
+
+router.get("/:userid", async (req, res) => {
+  const user = new User();
+  user.userid = req.params.userid;
+  user.findById((err, result) => {
+    if (err) {
+      return res.status(500).send("Internal Server error");
+    } else {
+      Object.assign(user, result);
+      user.password = null;
+      return res.status(200).json(user);
     }
   });
 });
@@ -354,7 +435,7 @@ router.get("/confirm/:confimrUri", async (req, res) => {
       if (err) {
         return res.status(500).send("Internal Server error");
       }
-      return res.redirect("http://loclaohst:3000/userconfirmed/");
+      return res.redirect("http://localhost:3000/userconfirmed/");
     });
   });
 });
