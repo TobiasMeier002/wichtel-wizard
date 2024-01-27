@@ -156,7 +156,7 @@ class User {
                   sendConfirmationEmail,
                   sendInvitationEmail,
                 } = require("../utils/mailer");
-                if (user[0].password != "") {
+                if (user[0].password != "" || user[0].password != null || !(typeof user[0].password == 'undefined')) {
                   //send confimration E-Mail if the user has registered at the login page
                   sendConfirmationEmail(user[0]);
                 } else {
