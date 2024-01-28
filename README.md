@@ -22,3 +22,5 @@ Commands
 Open http://localhost:3000/ to access the frontend part of the application
 
 Open http://localhost:8000/api-docs/ to access the API documentation
+
+Open http://localhost:8025/ to access mailhog interface to get the E-Mail invitations
